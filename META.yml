@@ -1,0 +1,31 @@
+---
+abstract: 'middlewares distribution'
+author:
+  - 'Kazuhiro Osawa <ko@yappo.ne.jp>'
+build_requires:
+  Test::More: 0
+  YAML: 0
+distribution_type: module
+generated_by: 'Module::Install version 0.770'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: HTTP-Engine-Middleware
+no_index:
+  directory:
+    - inc
+    - t
+recommends:
+  CGI::ExceptionManager: 0
+  Data::Visitor::Encode: 0
+  HTML::StickyQuery: 0
+  HTTP::MobileAgent: 0
+  HTTP::MobileAttribute: 0
+  Module::Reload: 0
+  Scope::Upper: 0
+requires:
+  HTTP::Engine: 0.1.1
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
