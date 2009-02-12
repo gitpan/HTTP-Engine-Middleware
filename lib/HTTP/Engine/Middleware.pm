@@ -1,6 +1,6 @@
 package HTTP::Engine::Middleware;
 use Mouse;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp ();
 
@@ -122,21 +122,22 @@ sub install {
 
             local *before_handle = sub { push @before_handles, @_ };
             local *after_handle  = sub { push @after_handles, @_ };
-            local *middleware_method = $self->method_class ? sub {
+            local *middleware_method = sub {
                 my($method, $code) = @_;
                 my $method_class = $self->method_class;
                 if ($method =~ /^(.+)\:\:([^\:]+)$/) {
                     ($method_class, $method) = ($1, $2);
                 }
+                return unless $method_class;
+
                 no strict 'refs';
                 *{"$name\::$method"}         = $code;
                 *{"$method_class\::$method"} = $code;
-            } : sub {};
+            };
             local *outer_middleware = sub { push @{ $dependend{$name}->{outer} }, $_[0] };
             local *inner_middleware = sub { push @{ $dependend{$name}->{inner} }, $_[0] };
-            local $@;
+
             Mouse::load_class($name);
-            $@ and Carp::croak $@;
 
             *{"$name\::_before_handles"}    = sub () { @before_handles };
             *{"$name\::_after_handles"}     = sub () { @after_handles };
@@ -197,8 +198,8 @@ sub handler {
         }
         my $msg;
         unless ($res) {
-            local $@;
             $self->diecatch(0);
+            local $@;
             eval { $res = $handle->($req) };
             $msg = $@ if !$self->diecatch && $@;
         }
@@ -266,9 +267,6 @@ Session
 Authentication
 
 OpenID
-
-Static
-
 
 and more ideas
 

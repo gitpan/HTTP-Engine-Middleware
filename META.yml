@@ -19,13 +19,16 @@ no_index:
 recommends:
   CGI::ExceptionManager: 0
   Data::Visitor::Encode: 0
+  HTML::FillInForm: 2.00
   HTML::StickyQuery: 0
-  HTTP::MobileAgent: 0
   HTTP::MobileAttribute: 0
+  MIME::Types: 0
   Module::Reload: 0
+  Path::Class: 0
   Scope::Upper: 0
+  Text::SimpleTable: 0
 requires:
-  HTTP::Engine: 0.1.1
+  HTTP::Engine: 0.1.3
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01
+version: 0.02
