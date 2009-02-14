@@ -1,6 +1,6 @@
 package HTTP::Engine::Middleware;
 use Mouse;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp ();
 
@@ -97,14 +97,15 @@ sub install {
     my($self, @middlewares) = @_;
 
     my %config;
-    for my $middleware (@middlewares) {
-        if (ref($middleware) eq 'HASH') {
-            $config{$self->middlewares->[-1]} = $middleware;
-            next;
+    for my $stuff (@middlewares) {
+        if (ref($stuff) eq 'HASH') {
+            my $mw_name = $self->middlewares->[-1]; # configuration for last one item
+            $config{$mw_name} = $stuff;
+        } else {
+            my $mw_name = $stuff;
+            push @{ $self->middlewares }, $mw_name;
+            $config{$mw_name} = +{ };
         }
-
-        $config{$middleware} = {};
-        push @{ $self->middlewares }, $middleware;
     }
 
     # load and create instance
@@ -268,6 +269,8 @@ Authentication
 
 OpenID
 
+mod_rewrite ( someone write :p )
+
 and more ideas
 
 =head1 AUTHOR
@@ -277,8 +280,6 @@ Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
 Daisuke Maki
 
 Tokuhiro Matsuno E<lt>tokuhirom@gmail.comE<gt>
-
-dann
 
 nyarla
 

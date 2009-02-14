@@ -38,6 +38,7 @@ features(
         -default => 0,
         recommends_hack('MIME::Types'),
         recommends_hack('Path::Class'),
+        recommends_hack('MouseX::Types::Path::Class'),
     ],
 
 # fill in form

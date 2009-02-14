@@ -7,8 +7,9 @@ eval q{ use MIME::Types };
 plan skip_all => "MIME::Types is not installed" if $@;
 eval q{ use Path::Class };
 plan skip_all => "Path::Class is not installed" if $@;
+plan skip_all => "MouseX::Types::Path::Class is not installed" unless eval "use MouseX::Types::Path::Class;1;";
 
-plan tests => 3 * blocks;
+plan tests => 12 * blocks;
 
 use HTTP::Engine;
 use HTTP::Engine::Middleware;
@@ -16,21 +17,8 @@ use HTTP::Engine::Response;
 use HTTP::Request;
 use Path::Class;
 
-run {
-    my $block = shift;
-
-    my $mw = HTTP::Engine::Middleware->new;
-    $mw->install(
-        'HTTP::Engine::Middleware::Static' => {
-            path => [
-                '/static/' => Path::Class::Dir->new(qw/ t htdocs /),
-                '/dist/'   => Path::Class::Dir->new(qw/ . /),
-                '/lib/'    => Path::Class::Dir->new(qw/ . lib HTTP Engine /),
-                '/t'       => Path::Class::Dir->new(qw/ . t 100 /),
-                '/htdocs/' => Path::Class::Dir->new(qw/ . t htdocs /),
-            ],
-        },
-    );
+sub run_tests {
+    my($block, $mw) = @_;
 
     my $request = HTTP::Request->new(
         GET => $block->uri
@@ -47,6 +35,42 @@ run {
     is $response->content_type, $block->content_type, 'content type';
     my $body = $block->body;
     like $response->content, qr/$body/, 'body';
+}
+
+run {
+    my $block = shift;
+
+    my @config = (
+        'HTTP::Engine::Middleware::Static' => {
+            regexp  => qr{^(/css/(?!dynamic).+|/robots\.txt)$},
+            regexp  => qr{^(/(?:css|js|img)/(?!dynamic).+|/manual/.*|/robots\.txt)$},
+            docroot => Path::Class::Dir->new('t', 'htdocs'),
+            directory_index => 'index.html',
+        },
+    );
+
+    my $mw = HTTP::Engine::Middleware->new;
+    ok $mw->install(@config), 'firast instance';
+
+    run_tests($block, $mw);
+
+    my $mw2 = HTTP::Engine::Middleware->new;
+    ok $mw2->install(@config), 'create multi instance';
+
+    run_tests($block, $mw2);
+
+    my @config2 = (
+        'HTTP::Engine::Middleware::Static' => {
+            regexp  => qr{^(/(?:css|js|img)/(?!dynamic).+|/manual/.*|/robots\.txt)$},
+            docroot => Path::Class::Dir->new('t', 'htdocs')->stringify,
+            directory_index => 'index.html',
+        },
+    );
+
+    my $mw3 = HTTP::Engine::Middleware->new;
+    ok $mw3->install(@config2), 'firast instance';
+
+    run_tests($block, $mw3);
 };
 
 
@@ -58,50 +82,38 @@ __END__
 --- body: dynamic
 --- code: 200
 
-=== dist
---- uri: http://localhost/dist/Makefile.PL
---- content_type: application/x-perl
---- body: use inc::Module::Install
+=== robots
+--- uri: http://localhost/robots.txt
+--- content_type: text/plain
+--- body: robots.txt here
 --- code: 200
 
-=== dist not found
---- uri: http://localhost/dist/notfound.html
+=== directory index
+--- uri: http://localhost/manual/
+--- content_type: text/html
+--- body: index.html
+--- code: 200
+
+=== css
+--- uri: http://localhost/css/mobile.css
+--- content_type: text/css
+--- body: .mobile { display: none; }
+--- code: 200
+
+=== not found
+--- uri: http://localhost/css/unknown.css
 --- content_type: text/html
 --- body: not found
 --- code: 404
 
-=== lib
---- uri: http://localhost/lib/Middleware.pm
---- content_type: application/x-pagemaker
---- body: package HTTP::Engine::Middleware;
---- code: 200
-
-=== lib 2
---- uri: http://localhost/lib/Middleware/Static.pm
---- content_type: application/x-pagemaker
---- body: package HTTP::Engine::Middleware::Static;
---- code: 200
-
-=== lib not found
---- uri: http://localhost/lib/notfound.html
+=== directory traversal
+--- uri: http://localhost/css/../../Makefile.PL
 --- content_type: text/html
---- body: not found
---- code: 404
+--- body: forbidden
+--- code: 403
 
-=== t/100 3
---- uri: http://localhost/t_core/wrap.t
---- content_type: application/x-troff
---- body: \$req\-\>header\(\'X-Key\'\)
---- code: 200
-
-=== t/100 not found
---- uri: http://localhost/t_base.txt
+=== handle backend
+--- uri: http://localhost/css/dynamic-unknown.css
 --- content_type: text/html
---- body: not found
---- code: 404
-
-=== index
---- uri: http://localhost/htdocs/
---- content_type: text/html
---- body: index page
+--- body: dynamic
 --- code: 200

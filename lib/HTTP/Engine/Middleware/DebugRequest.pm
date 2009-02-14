@@ -2,6 +2,8 @@ package HTTP::Engine::Middleware::DebugRequest;
 use HTTP::Engine::Middleware;
 use Text::SimpleTable;
 
+with 'HTTP::Engine::Middleware::Role::Logger';
+
 before_handle {
     my ( $c, $self, $req ) = @_;
     $self->report_request_info($req);
@@ -26,7 +28,7 @@ sub report_params {
                 ref $value eq 'ARRAY' ? ( join ', ', @$value ) : $value );
         }
         my $message = "Parameters: \n" . $t->draw;
-        $self->log( 'info', $message );
+        $self->log( $message );
     }
 }
 
@@ -39,7 +41,7 @@ sub report_request_basic_info {
     );
     $t->row( $req->path, $req->method, $req->base );
     my $message = "Matching Info:\n" . $t->draw;
-    $self->log( 'info', $message );
+    $self->log( $message );
 }
 
 __MIDDLEWARE__
@@ -48,15 +50,14 @@ __END__
 
 =head1 NAME
 
-HTTP::Engine::Middleware::DebugRequest - documentation is TODO
+HTTP::Engine::Middleware::DebugRequest - dump request
 
 =head1 SYNOPSIS
 
     my $mw = HTTP::Engine::Middleware->new;
     $mw->install( 'HTTP::Engine::Middleware::DebugRequest' => {
         logger => sub {
-            my($level, $msg) = @_;
-            warn $mgs;
+            warn @_;
         },
     });
     HTTP::Engine->new(
@@ -66,4 +67,15 @@ HTTP::Engine::Middleware::DebugRequest - documentation is TODO
         }
     )->run();
 
-=cut
+=head1 DESCRIPTION
+
+This middleware prints request info like Catalyst.
+
+=head1 AUTHOR
+
+dann
+
+=head1 SEE ALSO
+
+L<HTTP::Engine::Middleware>
+

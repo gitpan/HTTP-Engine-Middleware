@@ -38,3 +38,7 @@ TBA
 cp
 JIS
 utf
+yappo
+dann
+precuredaisuki
+backend

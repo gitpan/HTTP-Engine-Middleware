@@ -5,9 +5,8 @@ plan tests => 9;
 
 eval q{ use HTTP::Request::Common };
 plan skip_all => "HTTP::Request::Common is not installed" if $@;
-eval q{ use HTTP::Engine };
-plan skip_all => "HTTP::Engine is not installed: $@" if $@;
-eval q{ use HTTP::Engine::Middleware };
+eval q{ use Text::SimpleTable };
+plan skip_all => "Text::SimpleTable is not installed: $@" if $@;
 
 use HTTP::Engine;
 use HTTP::Engine::Middleware;
@@ -21,7 +20,7 @@ GET_PARAMETERS: {
     $mw->install(
         'HTTP::Engine::Middleware::DebugRequest',
         {   logger => sub {
-                my ( $level, $message ) = @_;
+                my ( $message ) = @_;
                 ::like $message, qr/getparam/, 'match get param'
                     unless $message =~ m/Path/;
                 }
@@ -49,7 +48,7 @@ POST_PARAMETERS: {
     $mw->install(
         'HTTP::Engine::Middleware::DebugRequest',
         {   logger => sub {
-                my ( $level, $message ) = @_;
+                my ( $message ) = @_;
                 ::like $message, qr/postparam/, 'match post param'
                     unless $message =~ m/Path/;
             },
@@ -76,7 +75,7 @@ NO_PARAMETERS: {
     $mw->install(
         'HTTP::Engine::Middleware::DebugRequest',
         {   logger => sub {
-                my ( $level, $message ) = @_;
+                my ( $message ) = @_;
                 ::like $message, qr/GET/, 'GET request'
                     unless $message =~ m/Parameter/;
             },
