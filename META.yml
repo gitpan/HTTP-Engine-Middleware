@@ -3,6 +3,7 @@ abstract: 'middlewares distribution'
 author:
   - 'Kazuhiro Osawa <ko@yappo.ne.jp>'
 build_requires:
+  IO::Scalar: 0
   Test::More: 0
   YAML: 0
 distribution_type: module
@@ -19,6 +20,7 @@ no_index:
 recommends:
   CGI::ExceptionManager: 0
   Data::Visitor::Encode: 0
+  Encode: 0
   HTML::FillInForm: 2.00
   HTML::StickyQuery: 0
   HTTP::MobileAttribute: 0
@@ -30,6 +32,8 @@ recommends:
   Text::SimpleTable: 0
 requires:
   HTTP::Engine: 0.1.3
+  HTTP::Request: 0
+  perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.04
+version: 0.05
