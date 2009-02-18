@@ -7,7 +7,7 @@ build_requires:
   Test::More: 0
   YAML: 0
 distribution_type: module
-generated_by: 'Module::Install version 0.770'
+generated_by: 'Module::Install version 0.790'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -24,8 +24,10 @@ recommends:
   HTML::FillInForm: 2.00
   HTML::StickyQuery: 0
   HTTP::MobileAttribute: 0
+  HTTP::Session: 0
   MIME::Types: 0
   Module::Reload: 0
+  MouseX::Types: 0
   MouseX::Types::Path::Class: 0
   Path::Class: 0
   Scope::Upper: 0
@@ -36,4 +38,4 @@ requires:
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.06
+version: 0.07
