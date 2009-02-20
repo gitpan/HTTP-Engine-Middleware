@@ -34,10 +34,10 @@ recommends:
   Text::SimpleTable: 0
 requires:
   Any::Moose: 0.04
-  HTTP::Engine: 0.1.4_02
+  HTTP::Engine: 0.1.4
   HTTP::Request: 0
   Mouse: 0.17
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.08_02
+version: 0.08

@@ -4,7 +4,7 @@ use Any::Moose;
 use Any::Moose (
     '::Util' => [qw/apply_all_roles/],
 );
-our $VERSION = '0.08_02';
+our $VERSION = '0.08';
 
 use Carp ();
 
@@ -280,8 +280,6 @@ method injection middleware
 HTTP::Engine::Middleware is official middlewares distribution of HTTP::Engine.
 
 =head1 WISHLIST
-
-Session
 
 Authentication
 

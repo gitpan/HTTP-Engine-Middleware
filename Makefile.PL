@@ -24,7 +24,7 @@ all_from 'lib/HTTP/Engine/Middleware.pm';
 
 requires 'Any::Moose'   => '0.04';
 requires 'Mouse'        => '0.17';
-requires 'HTTP::Engine' => '0.1.4_02';
+requires 'HTTP::Engine' => '0.1.4';
 requires 'HTTP::Request';
 
 features(
@@ -151,7 +151,7 @@ if (HAVE_MOOSE) {
         open my $from_fh, '<', $from;
         open my $to_fh, '>', $to;
         if ($to =~ /\.t$/) {
-            print $to_fh "{ package dummy_load_moose; use Moose; }\n";
+            print $to_fh "BEGIN { \$ENV{ANY_MOOSE} = 'Moose'; }\n";
         }
 
         while (<$from_fh>) {
