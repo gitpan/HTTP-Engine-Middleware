@@ -4,7 +4,7 @@ use Any::Moose;
 use Any::Moose (
     '::Util' => [qw/apply_all_roles/],
 );
-our $VERSION = '0.10';
+our $VERSION = '0.11_01';
 
 use Carp ();
 
@@ -15,9 +15,15 @@ has 'middlewares' => (
 );
 
 has '_instance_of' => (
-    is      => 'ro',
+    is      => 'rw',
     isa     => 'HashRef',
     default => sub { +{} },
+);
+
+has '_instance_ary_ex' => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { +[] },
 );
 
 has 'method_class' => (
@@ -65,11 +71,9 @@ sub import {
         __MIDDLEWARE__($caller);
     };
 
-    *{"$caller\::before_handle"}     = sub (&) { goto \&before_handle; };
-    *{"$caller\::after_handle"}      = sub (&) { goto \&after_handle; };
-    *{"$caller\::middleware_method"} = sub { goto \&middleware_method; };
-    *{"$caller\::outer_middleware"}  = sub ($) { goto \&outer_middleware; };
-    *{"$caller\::inner_middleware"}  = sub ($)  { goto \&inner_middleware; };
+    *{"$caller\::before_handle"}     = sub (&) { goto \&before_handle     };
+    *{"$caller\::after_handle"}      = sub (&) { goto \&after_handle      };
+    *{"$caller\::middleware_method"} = sub     { goto \&middleware_method };
 }
 
 sub __MIDDLEWARE__ {
@@ -82,116 +86,113 @@ sub __MIDDLEWARE__ {
     "MIDDLEWARE";
 }
 
-sub before_handle {
-    Carp::croak "Can't call before_handle function outside Middleware's load phase";
-}
+BEGIN {
+    no strict 'refs';
+    for my $meth (
+        qw(before_handle after_handle middleware_method)
+      )
+    {
+        *{__PACKAGE__ . "::$meth"} = sub {
+            Carp::croak("Can't call ${meth} function outside Middleware's load phase");
+        };
+    }
+};
 
-sub after_handle {
-    Carp::croak "Can't call after_handle function outside Middleware's load phase";
-}
-
-sub middleware_method {
-    Carp::croak "Can't call middleware_method function outside Middleware's load phase";
-}
-
-sub outer_middleware {
-    Carp::croak "Can't call outer_middleware function outside Middleware's load phase";
-}
-
-sub inner_middleware {
-    Carp::croak "Can't call inner_middleware function outside Middleware's load phase";
-}
-
+# this method's return value is indefinite.
 sub install {
     my($self, @middlewares) = @_;
 
-    my %config;
-    for my $stuff (@middlewares) {
-        if (ref($stuff) eq 'HASH') {
-            my $mw_name = $self->middlewares->[-1]; # configuration for last one item
-            $config{$mw_name} = $stuff;
+    my $args = $self->_build_args(@middlewares);
+    $self->_create_middleware_instance($args);
+}
+
+# this module accepts
+#  $mw->install(qw/HTTP::Engine::Middleware::Foo/);
+# and
+#  $mw->install('HTTP::Engine::Middleware::Foo' => { arg1 => 'foo'});
+sub _build_args {
+    my $self = shift;
+
+    # basis of Data::OptList
+    my @middlewares;
+    my $max = scalar(@_);
+    for (my $i = 0; $i < $max ; $i++) {
+        if ($i + 1 < $max && ref($_[$i + 1])) {
+            push @middlewares, [ $_[$i++] => $_[$i] ];
         } else {
-            my $mw_name = $stuff;
-            push @{ $self->middlewares }, $mw_name;
-            $config{$mw_name} = +{ };
+            push @middlewares, [ $_[$i] => {} ];
         }
     }
 
-    # load and create instance
-    my %dependend ;
-    while (my($name, $config) = each %config) {
-        $dependend{$name} = { outer => [], inner => [] };
+    return \@middlewares;
+}
 
-        unless ($name->can('before_handles')) {
-            # init declear
-            my @before_handles;
-            my @after_handles;
+# load & create middleware instance
+my %IS_INITIALIZED;
+sub _create_middleware_instance {
+    my ($self, $args) = @_;
 
-            no strict 'refs';
-            no warnings 'redefine';
+    my %instances;
+    for my $stuff (@$args) {
+        my $klass  = $stuff->[0];
+        my $config = $stuff->[1];
 
-            local *before_handle = sub { push @before_handles, @_ };
-            local *after_handle  = sub { push @after_handles, @_ };
-            local *middleware_method = sub {
-                my($method, $code) = @_;
-                my $method_class = $self->method_class;
-                if ($method =~ /^(.+)\:\:([^\:]+)$/) {
-                    ($method_class, $method) = ($1, $2);
-                }
-                return unless $method_class;
-
-                no strict 'refs';
-                *{"$name\::$method"}         = $code;
-                *{"$method_class\::$method"} = $code;
-            };
-            local *outer_middleware = sub { push @{ $dependend{$name}->{outer} }, $_[0] };
-            local *inner_middleware = sub { push @{ $dependend{$name}->{inner} }, $_[0] };
-
-            Any::Moose::load_class($name);
-
-            *{"$name\::_before_handles"}    = sub () { @before_handles };
-            *{"$name\::_after_handles"}     = sub () { @after_handles };
-            *{"$name\::_outer_middlewares"} = sub () { @{ $dependend{$name}->{outer} } };
-            *{"$name\::_inner_middlewares"} = sub () { @{ $dependend{$name}->{inner} } };
-        } else {
-            $dependend{$name}->{outer} = [ $name->_outer_middlewares ];
-            $dependend{$name}->{inner} = [ $name->_inner_middlewares ];
+        unless ($IS_INITIALIZED{$klass}++) {
+            $self->_init_middleware_class($klass);
         }
 
-        my $instance = $name->new($config);
-        @{ $instance->before_handles } = $name->_before_handles;
-        @{ $instance->after_handles }  = $name->_after_handles;
+        my $instance = $klass->new(
+            %$config,
+            before_handles => [$klass->_before_handles()],
+            after_handles  => [$klass->_after_handles() ],
+        );
 
-        $self->_instance_of->{$name} = $instance;
+        push @{ $self->_instance_ary_ex }, $instance;
+        push @{ $self->middlewares }, $klass;
+        push @{ $self->_instance_of->{$klass} }, $instance;
     }
-    # check dependency and sorting
-    my $i = 0;
-    my %sort = map { $_ => $i++ } @{ $self->middlewares };
-    while (my($from, $conf) = each %dependend) {
-        for my $to (@{ $conf->{outer} }) {
-            Carp::croak "'$from' need to '$to'" unless is_class_loaded($to);
-            $sort{$to} = $sort{$from} - 1;
+}
+
+# load one middleware 'class'
+sub _init_middleware_class {
+    my ($self, $klass,) = @_;
+
+    my @before_handles;
+    my @after_handles;
+
+    no warnings 'redefine';
+
+    local *before_handle = sub { push @before_handles, @_ };
+    local *after_handle  = sub { push @after_handles, @_ };
+    local *middleware_method = sub {
+        my($method, $code) = @_;
+        my $method_class = $self->method_class;
+        if ($method =~ /^(.+)\:\:([^\:]+)$/) {
+            ($method_class, $method) = ($1, $2);
         }
-        for my $to (@{ $conf->{inner} }) {
-            Carp::croak "'$from' need to '$to'" unless is_class_loaded($to);
-            $sort{$to} = $sort{$from} + 1;
-        }
-    }
-    @{ $self->middlewares } = sort { $sort{$a} <=> $sort{$b} } keys %sort;
+        return unless $method_class;
+
+        no strict 'refs';
+        *{"$klass\::$method"}        = $code;
+        *{"$method_class\::$method"} = $code;
+    };
+
+    Any::Moose::load_class($klass);
+
+    no strict 'refs';
+    *{"${klass}::_before_handles"}    = sub () { @before_handles    };
+    *{"${klass}::_after_handles"}     = sub () { @after_handles     };
 }
 
 sub is_class_loaded {
     my $class = shift;
-    if (Any::Moose::is_moose_loaded()) {
-        return Class::MOP::is_class_loaded( $class );
-    } else {
-        return Mouse::is_class_loaded( $class );
-    }
+    return Any::Moose::is_class_loaded($class);
 }
 
 sub instance_of {
     my($self, $name) = @_;
-    $self->_instance_of->{$name};
+    my $stuff = $self->_instance_of->{$name};
+    return wantarray ? @{$stuff} : $stuff->[0];
 }
 
 sub handler {
@@ -203,8 +204,7 @@ sub handler {
         my $res;
         my @run_middlewares;
     LOOP:
-        for my $middleware (@{ $self->middlewares }) {
-            my $instance = $self->_instance_of->{$middleware};
+        for my $instance (@{ $self->_instance_ary_ex }) {
             for my $code (@{ $instance->before_handles }) {
                 my $ret = $code->($self, $instance, $req);
                 if ($ret->isa('HTTP::Engine::Response')) {

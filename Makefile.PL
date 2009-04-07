@@ -3,7 +3,7 @@ BEGIN
 {
     if (!$ENV{SHIPIT} && eval {
         require Moose  && Moose->VERSION(
-            '0.68'
+            '0.73'
         ) && require MooseX::Types
     }) {
         *HAVE_MOOSE = sub { 1 };
@@ -22,7 +22,7 @@ BEGIN
 name 'HTTP-Engine-Middleware';
 all_from 'lib/HTTP/Engine/Middleware.pm';
 
-requires 'Any::Moose'   => '0.04';
+requires 'Any::Moose'   => '0.06';
 requires 'Mouse'        => '0.17';
 requires 'HTTP::Engine' => '0.1.4';
 requires 'HTTP::Request';
@@ -45,6 +45,12 @@ features(
     'DebugRequest' => [
         -default => 0,
         recommends_hack('Text::SimpleTable'),
+    ],
+
+    'Status::Memory' => [
+        -default => 0,
+        recommends_hack('B::TerseSize'),
+        recommends_hack('Devel::Symdump'),
     ],
 
 # static file maneger ( developer ? )
@@ -113,6 +119,7 @@ if (HAVE_MOOSE) {
 build_requires 'IO::Scalar';
 build_requires 'Test::More';
 build_requires 'YAML';
+auto_set_repository;
 use_test_base;
 auto_include;
 WriteAll;
