@@ -20,6 +20,7 @@ no_index:
 recommends:
   B::TerseSize: 0
   CGI::ExceptionManager: 0
+  Data::Visitor: 0.23
   Data::Visitor::Encode: 0
   Devel::Symdump: 0
   Encode: 0
@@ -30,17 +31,17 @@ recommends:
   MIME::Types: 0
   Module::Reload: 0
   MouseX::Types: 0
-  MouseX::Types::Path::Class: 0
+  MouseX::Types::Path::Class: 0.05
   Path::Class: 0
   Scope::Upper: 0
   Text::SimpleTable: 0
 requires:
   Any::Moose: 0.06
-  HTTP::Engine: 0.1.4
+  HTTP::Engine: 0.1.6
   HTTP::Request: 0
-  Mouse: 0.17
+  Mouse: 0.20
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://svn.coderepos.org/share/lang/perl/HTTP-Engine-Middleware/trunk
-version: 0.11_01
+version: 0.11

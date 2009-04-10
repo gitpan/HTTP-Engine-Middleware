@@ -23,8 +23,8 @@ name 'HTTP-Engine-Middleware';
 all_from 'lib/HTTP/Engine/Middleware.pm';
 
 requires 'Any::Moose'   => '0.06';
-requires 'Mouse'        => '0.17';
-requires 'HTTP::Engine' => '0.1.4';
+requires 'Mouse'        => '0.20';
+requires 'HTTP::Engine' => '0.1.6';
 requires 'HTTP::Request';
 
 features(
@@ -59,7 +59,7 @@ features(
         -default => 0,
         recommends_hack('MIME::Types'),
         recommends_hack('Path::Class'),
-        recommends_hack('MouseX::Types::Path::Class'),
+        recommends_hack('MouseX::Types::Path::Class' => '0.05'),
     ],
 
 # fill in form
@@ -73,6 +73,7 @@ features(
 
     'Encode' => [
         -default => 0,
+        recommends_hack('Data::Visitor' => '0.23'),
         recommends_hack('Data::Visitor::Encode'),
         recommends_hack('Encode'),
     ],
