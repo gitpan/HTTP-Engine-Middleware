@@ -22,6 +22,7 @@ recommends:
   CGI::ExceptionManager: 0
   Data::Visitor: 0.23
   Data::Visitor::Encode: 0
+  DateTime: 0
   Devel::Symdump: 0
   Encode: 0
   HTML::FillInForm: 2.00
@@ -44,4 +45,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://svn.coderepos.org/share/lang/perl/HTTP-Engine-Middleware/trunk
-version: 0.11
+version: 0.12
