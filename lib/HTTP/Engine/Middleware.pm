@@ -4,7 +4,7 @@ use Any::Moose;
 use Any::Moose (
     '::Util' => [qw/apply_all_roles/],
 );
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 use Carp ();
 
@@ -31,6 +31,9 @@ has 'method_class' => (
     isa     => 'Str',
 );
 
+# this flag means...
+#   13:06  Yappo:> どっかの middleware が die を catch したので HEM core は die を rethrow しないよー
+#   13:06  Yappo:> って事すね
 has 'diecatch' => (
     is  => 'rw',
     isa => 'Bool',
@@ -58,7 +61,7 @@ sub import {
 
     init_class($caller);
 
-    if (Any::Moose::is_moose_loaded()) {
+    if (Any::Moose::moose_is_preferred()) {
         Moose->import({ into_level => 1 });
     } else {
         Mouse->export_to_level( 1 );
@@ -219,7 +222,10 @@ sub handler {
         unless ($res) {
             $self->diecatch(0);
             local $@;
-            eval { $res = $handle->($req) };
+            eval {
+                $res = $handle->($req);
+                $self->diecatch(0); # yes! i'm still alive!
+            };
             $msg = $@ if !$self->diecatch && $@;
         }
         die $msg if $msg;
@@ -313,9 +319,11 @@ L<HTTP::Engine>
 
 =head1 REPOSITORY
 
-  svn co http://svn.coderepos.org/share/lang/perl/HTTP-Engine-Middleware/trunk HTTP-Engine-Middleware
+We moved to GitHub.
 
-HTTP::Engine::Middleware's Subversion repository is hosted at L<http://coderepos.org/share/>.
+  git clone git://github.com/http-engine/HTTP-Engine-Middleware.git
+
+HTTP::Engine::Middleware's Git repository is hosted at L<http://github.com/http-engine/HTTP-Engine-Middleware>.
 patches and collaborators are welcome.
 
 =head1 LICENSE

@@ -8,6 +8,7 @@ use Cwd;
 use Any::Moose 'X::Types::Path::Class';
 use Any::Moose '::Util::TypeConstraints';
 use File::Spec::Unix;
+use HTTP::Date ();
 
 # corece of Regexp
 subtype 'HTTP::Engine::Middleware::Static::Regexp'
@@ -45,6 +46,12 @@ has 'mime_types' => (
     },
 );
 
+has 'is_404_handler' => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 1,
+);
+
 before_handle {
     my ( $c, $self, $req ) = @_;
 
@@ -70,7 +77,10 @@ before_handle {
     my $realpath = Cwd::realpath($file->absolute->stringify);
     return HTTP::Engine::Response->new( status => 403, body => 'forbidden') unless $docroot->subsumes($realpath);
 
-    return HTTP::Engine::Response->new( status => '404', body => 'not found' ) unless -e $file;
+    unless (-e $file && !-d _) {
+        return $req unless $self->is_404_handler;
+        return HTTP::Engine::Response->new( status => '404', body => 'not found' );
+    }
 
     my $content_type = 'text/plain';
     if ($file =~ /.*\.(\S{1,})$/xms ) {
@@ -84,7 +94,7 @@ before_handle {
     my $res = HTTP::Engine::Response->new( body => $fh, content_type => $content_type );
     my $stat = $file->stat;
     $res->header( 'Content-Length' => $stat->size );
-    $res->header( 'Last-Modified'  => $stat->mtime );
+    $res->header( 'Last-Modified'  => HTTP::Date::time2str( $stat->mtime ) );
     $res;
 };
 
@@ -189,6 +199,32 @@ Will you want to set config from yaml?
     # $ GET http//localhost/js/dynamic-json.js
     # to get the your application response
 
+Do you want 404 handle has backend application?
+
+    my $mw = HTTP::Engine::Middleware->new;
+    $mw->install( 'HTTP::Engine::Middleware::Static' => {
+        regexp         => qr{^/css/.+)$},
+        docroot        => '/path/to/htdocs/',
+        is_404_handler => 0, # 404 handling off
+    });
+    HTTP::Engine->new(
+        interface => {
+            module => 'YourFavoriteInterfaceHere',
+            request_handler => $mw->handler(sub {
+                HTTP::Engine::Response->new( body => 'dynamic daikuma' );
+            }),
+        }
+    )->run();
+
+    # if css has foo.css file only
+
+    # $ GET http//localhost/css/foo.css
+    # to get the /path/to/htdocs/css/foo.css
+
+    # $ GET http//localhost/css/bar.css
+    # to get the 'dynamic daikuma' strings
+
+
 =head1 DESCRIPTION
 
 On development site, you would feed some static contents from Interface::ServerSimple, or other stuff.
@@ -197,5 +233,7 @@ This module helps that.
 =head1 AUTHORS
 
 Kazuhiro Osawa
+
+typester (is_404_handler support)
 
 =cut

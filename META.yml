@@ -27,6 +27,7 @@ recommends:
   Encode: 0
   HTML::FillInForm: 2.00
   HTML::StickyQuery: 0
+  HTTP::Date: 0
   HTTP::MobileAttribute: 0
   HTTP::Session: 0
   MIME::Types: 0
@@ -37,12 +38,12 @@ recommends:
   Scope::Upper: 0
   Text::SimpleTable: 0
 requires:
-  Any::Moose: 0.06
-  HTTP::Engine: 0.1.6
+  Any::Moose: 0.08
+  HTTP::Engine: 0.1.8
   HTTP::Request: 0
   Mouse: 0.20
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-  repository: http://svn.coderepos.org/share/lang/perl/HTTP-Engine-Middleware/trunk
-version: 0.12
+  repository: git://github.com/http-engine/HTTP-Engine-Middleware.git
+version: 0.13
