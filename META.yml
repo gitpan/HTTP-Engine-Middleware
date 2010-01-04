@@ -3,11 +3,14 @@ abstract: 'middlewares distribution'
 author:
   - 'Kazuhiro Osawa <ko@yappo.ne.jp>'
 build_requires:
+  ExtUtils::MakeMaker: 6.42
   IO::Scalar: 0
   Test::More: 0
   YAML: 0
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.790'
+generated_by: 'Module::Install version 0.91'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,6 +20,7 @@ no_index:
   directory:
     - inc
     - t
+    - xt
 recommends:
   B::TerseSize: 0
   CGI::ExceptionManager: 0
@@ -39,6 +43,7 @@ recommends:
   Text::SimpleTable: 0
 requires:
   Any::Moose: 0.09
+  Filter::Util::Call: 0
   HTTP::Engine: 0.02001
   HTTP::Request: 0
   Mouse: 0.23
@@ -46,4 +51,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/http-engine/HTTP-Engine-Middleware.git
-version: 0.17
+version: 0.18
