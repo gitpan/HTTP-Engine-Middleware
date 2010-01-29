@@ -44,11 +44,11 @@ recommends:
 requires:
   Any::Moose: 0.09
   Filter::Util::Call: 0
-  HTTP::Engine: 0.02001
+  HTTP::Engine: 0.03004
   HTTP::Request: 0
   Mouse: 0.23
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/http-engine/HTTP-Engine-Middleware.git
-version: 0.18
+version: 0.19
